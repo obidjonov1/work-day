@@ -59,14 +59,18 @@
   .status.fail { color: #e74c3c; }
   .salaryRow {
     margin-top: 14px; padding-top: 14px; border-top: 1px solid #eee;
-    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
   }
   .salaryRow label { font-size: 14px; color: #333; white-space: nowrap; }
   .salaryRow input {
-    flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px;
+    flex: 1; min-width: 90px; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px;
     font-size: 14px; text-align: right; background: #f7f8fa; color: #222;
   }
   .salaryRow .unit { font-size: 12px; color: #999; }
+  .doneBtn {
+    background: #4f7cff; color: #fff; border: none; border-radius: 8px;
+    padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%;
+  }
   .yearRow {
     display: flex; justify-content: space-between; align-items: center; padding: 10px 4px;
     border-bottom: 1px solid #f0f0f0; font-size: 14px; gap: 8px;
@@ -103,8 +107,9 @@
     </div>
     <div class="salaryRow">
       <label for="salaryInput">Oylik maosh:</label>
-      <input type="number" id="salaryInput" placeholder="0" inputmode="decimal" onchange="onSalaryChange()">
+      <input type="text" id="salaryInput" placeholder="0" inputmode="numeric" oninput="onSalaryInput()" onblur="onSalaryChange()">
       <span class="unit">won</span>
+      <button class="doneBtn" onclick="onSalaryDone()">Tayyor</button>
     </div>
     <div class="status" id="statusMsg"></div>
   </div>
@@ -234,13 +239,34 @@ async function render() {
 
   const salary = await loadSalary(y, m);
   const salaryInput = document.getElementById("salaryInput");
-  salaryInput.value = salary ? salary : "";
+  salaryInput.value = salary ? salary.toLocaleString("en-US") : "";
+}
+
+function parseSalaryInput(str) {
+  return Number(String(str).replace(/[^0-9]/g, "")) || 0;
+}
+
+function onSalaryInput() {
+  const input = document.getElementById("salaryInput");
+  const raw = parseSalaryInput(input.value);
+  const cursorFromEnd = input.value.length - input.selectionStart;
+  input.value = raw ? raw.toLocaleString("en-US") : "";
+  const pos = Math.max(0, input.value.length - cursorFromEnd);
+  input.setSelectionRange(pos, pos);
+}
+
+async function onSalaryDone() {
+  document.getElementById("salaryInput").blur();
+  const y = current.getFullYear();
+  const m = current.getMonth();
+  const val = parseSalaryInput(document.getElementById("salaryInput").value);
+  await persistSalary(y, m, val);
 }
 
 async function onSalaryChange() {
   const y = current.getFullYear();
   const m = current.getMonth();
-  const val = Number(document.getElementById("salaryInput").value) || 0;
+  const val = parseSalaryInput(document.getElementById("salaryInput").value);
   await persistSalary(y, m, val);
 }
 
