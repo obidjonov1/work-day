@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Do'kon</title>
+<title>Ish kunlari hisoblagichi</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
@@ -16,492 +16,156 @@
     margin: 0;
     padding: 16px;
   }
-  .wrap { max-width: 460px; margin: 0 auto; }
-  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
-  .sub { font-size: 12px; color: #999; text-align: center; margin-bottom: 16px; }
-
-  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .card {
+    background: var(--tg-theme-secondary-bg-color, #fff);
+    border-radius: 16px;
+    padding: 20px;
+    max-width: 440px;
+    margin: 0 auto;
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 18px; }
   .tabs button {
     flex: 1; padding: 8px 0; border: none; border-radius: 8px;
     background: #eef1f5; color: #666; font-size: 13px; cursor: pointer;
-    position: relative;
   }
   .tabs button.active { background: #4f7cff; color: #fff; font-weight: 600; }
-  .tabBadge {
-    position: absolute; top: -6px; right: -6px;
-    min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px;
-    background: #e74c3c; color: #fff; font-size: 11px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 0 0 2px var(--tg-theme-bg-color, #f4f5f7);
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .header button.nav {
+    background: #eef1f5; border: none; border-radius: 8px; width: 36px; height: 36px;
+    font-size: 18px; cursor: pointer; color: #333;
   }
-
-  .subTabs { display: flex; gap: 6px; margin-bottom: 14px; }
-  .subTabs button {
-    flex: 1; padding: 6px 0; border: 1px solid #ddd; border-radius: 8px;
-    background: none; color: #666; font-size: 12px; cursor: pointer;
+  .header h2 { margin: 0; font-size: 18px; text-transform: capitalize; }
+  .weekdays {
+    display: grid; grid-template-columns: repeat(7, 1fr); text-align: center;
+    font-size: 12px; color: #999; margin-bottom: 8px;
   }
-  .subTabs button.active { background: #4f7cff; color: #fff; border-color: #4f7cff; font-weight: 600; }
-
-  .addProductBtn {
-    width: 100%; padding: 12px; border: none; border-radius: 10px; background: #2ecc71;
-    color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 16px;
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .day {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    border-radius: 10px; font-size: 14px; cursor: pointer; color: #444;
+    background: #f7f8fa; user-select: none;
   }
-
-  #productsView {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  .day.empty { visibility: hidden; }
+  .day.worked { background: #4f7cff; color: #fff; font-weight: 600; }
+  .summary {
+    margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee;
+    display: flex; justify-content: space-between; align-items: center;
   }
-  .productCard {
-    background: var(--tg-theme-secondary-bg-color, #fff);
-    border-radius: 12px; overflow: hidden;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    display: flex; flex-direction: column;
-  }
-  .productCard img {
-    width: 100%; height: 230px; object-fit: cover; display: block; background: #f0f0f2;
-  }
-  .cardGallery {
-    display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
-    height: 230px; background: #f0f0f2;
-  }
-  .cardGallery img {
-    width: 100%; flex-shrink: 0; scroll-snap-align: start; height: 230px; object-fit: cover; cursor: pointer;
-  }
-  .imgWrap { position: relative; }
-  .imgCountDots {
-    position: absolute; bottom: 6px; left: 0; right: 0;
-    display: flex; justify-content: center; gap: 4px; pointer-events: none;
-  }
-  .imgCountDots span {
-    width: 5px; height: 5px; border-radius: 50%; background: rgba(0,0,0,0.2);
-    box-shadow: 0 0 2px rgba(255,255,255,0.6);
-  }
-  .imgCountDots span.active { background: #4f7cff; }
-  .productBody { padding: 10px; display: flex; flex-direction: column; flex: 1; cursor: pointer; }
-  .productClickable { display: flex; flex-direction: column; flex: 1; }
-  .productActions { padding: 0 10px 10px; }
-  .productName {
-    font-size: 13px; font-weight: 700; margin-bottom: 4px; line-height: 1.3;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
-  .productDesc {
-    font-size: 11px; color: #888; margin-bottom: 6px; line-height: 1.3;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
-  .productPrice { font-size: 14px; font-weight: 700; color: #4f7cff; margin-bottom: 4px; margin-top: auto; }
-  .productDelivery { font-size: 11px; color: #888; margin-bottom: 8px; }
-  .orderBtn {
-    width: 100%; padding: 8px; border: none; border-radius: 8px; background: #4f7cff;
-    color: #fff; font-size: 12px; font-weight: 600; cursor: pointer;
-  }
-  .orderBtn:disabled { opacity: 0.6; }
-  .adminRow { display: flex; gap: 6px; margin-top: 6px; }
-  .adminRow button {
-    flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 8px; background: none;
-    font-size: 11px; cursor: pointer; color: #666;
-  }
-
-  .empty { text-align: center; color: #aaa; font-size: 13px; padding: 30px 0; grid-column: 1 / -1; }
-  .status { font-size: 12px; text-align: center; margin-top: 10px; min-height: 16px; font-weight: 600; }
+  .summary .count b { font-size: 22px; color: #4f7cff; }
+  .status { font-size: 12px; text-align: center; margin-top: 8px; min-height: 16px; font-weight: 600; }
   .status.ok { color: #2ecc71; }
   .status.fail { color: #e74c3c; }
   .status.info { color: #999; }
+  .salaryRow {
+    margin-top: 14px; padding-top: 14px; border-top: 1px solid #eee;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  }
+  .salaryRow label { font-size: 14px; color: #333; white-space: nowrap; }
+  .salaryRow input {
+    flex: 1; min-width: 90px; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 16px; text-align: right; background: #f7f8fa; color: #222;
+  }
+  .salaryRow .unit { font-size: 12px; color: #999; }
+  .doneBtn {
+    background: #4f7cff; color: #fff; border: none; border-radius: 8px;
+    padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%;
+  }
+  .yearRow {
+    display: flex; justify-content: space-between; align-items: center; padding: 10px 4px;
+    border-bottom: 1px solid #f0f0f0; font-size: 14px; gap: 8px;
+  }
+  .yearRow .mName { flex: 1.2; }
+  .yearRow .mDays { flex: 1; text-align: right; color: #4f7cff; font-weight: 600; }
+  .yearRow .mSalary { flex: 1.4; text-align: right; color: #666; }
+  .yearTotal {
+    margin-top: 14px; padding-top: 14px; border-top: 2px solid #eee;
+    display: flex; flex-direction: column; gap: 6px; font-size: 16px; font-weight: 600;
+  }
+  .yearTotal .row { display: flex; justify-content: space-between; }
+  .yearTotal b { color: #4f7cff; font-size: 20px; }
 
-  .claimBox {
-    background: #fff7e6; border: 1px solid #ffe1a8; border-radius: 12px;
-    padding: 14px; text-align: center; margin-bottom: 16px; font-size: 13px; color: #8a6100;
-  }
-  .claimBox button {
-    margin-top: 10px; padding: 10px 16px; border: none; border-radius: 8px;
-    background: #b5790a; color: #fff; font-weight: 600; cursor: pointer;
-  }
-
-  .orderRow {
-    background: var(--tg-theme-secondary-bg-color, #fff);
-    border-radius: 12px; padding: 12px; margin-bottom: 10px; font-size: 13px;
-    display: flex; gap: 10px;
-  }
-  .orderRow img {
-    width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: #eee; flex-shrink: 0; cursor: pointer;
-  }
-  .orderRow .body { flex: 1; min-width: 0; }
-  .orderInfoClick { cursor: pointer; }
-  .orderRow .top { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 4px; gap: 6px; }
-  .orderNumber { font-size: 11px; font-weight: 700; color: #4f7cff; margin-bottom: 4px; }
-  .orderRow .line { color: #666; margin-bottom: 2px; }
-  .badge {
-    display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
-    margin-top: 4px;
-  }
-  .badge.pending { background: #fff2d9; color: #b5790a; }
-  .badge.accepted { background: #e3f9ea; color: #1f8a4c; }
-  .badge.cancelled { background: #fbe3e3; color: #c0392b; }
-  .cancelBtn {
-    margin-top: 8px; width: 100%; padding: 8px; border: 1px solid #f3c8c4; border-radius: 8px;
-    background: none; color: #e74c3c; font-size: 12px; font-weight: 700; cursor: pointer;
-  }
-  .deleteBtn {
-    margin-top: 6px; width: 100%; padding: 7px; border: 1px solid #ddd; border-radius: 8px;
-    background: none; color: #888; font-size: 11px; cursor: pointer;
-  }
-  .acceptBtn {
-    margin-top: 8px; width: 100%; padding: 8px; border: none; border-radius: 8px;
-    background: #2ecc71; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer;
-  }
-
-  .overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-    display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 10;
-  }
-  .overlay.hidden { display: none; }
-  .overlayCard {
-    background: #fff; border-radius: 16px; padding: 20px; width: 100%; max-width: 380px;
-    max-height: 85vh; overflow-y: auto;
-  }
-  .overlayCard h2 { font-size: 16px; margin: 0 0 14px; text-align: center; }
-  .formRow { margin-bottom: 12px; }
-  .formRow label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; }
-  .formRow input, .formRow textarea, .formRow select {
-    width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;
-    font-size: 16px; background: #f7f8fa; color: #222; font-family: inherit;
-  }
-  .formRow textarea { resize: vertical; min-height: 60px; }
-  .phoneRow { display: flex; align-items: center; gap: 6px; }
-  .phoneRow .prefix {
-    padding: 10px 8px; background: #eef1f5; border-radius: 8px; font-size: 16px; font-weight: 600; color: #555;
-  }
-  .previewRow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-  .previewThumb { position: relative; width: 70px; height: 70px; }
-  .previewThumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
-  .previewThumb .rm {
-    position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%;
-    background: #e74c3c; color: #fff; border: none; font-size: 12px; line-height: 20px; padding: 0; cursor: pointer;
-  }
-  .gallery {
-    display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
-    background: #f0f0f2; height: 420px;
-  }
-  .gallery img {
-    width: 100%; flex-shrink: 0; scroll-snap-align: start; height: 420px; object-fit: cover; cursor: zoom-in;
-  }
-  .galleryDots { display: flex; justify-content: center; gap: 5px; padding: 8px 0; }
-  .galleryDots span { width: 6px; height: 6px; border-radius: 50%; background: #ddd; }
-  .galleryDots span.active { background: #4f7cff; }
-  .sizeOptions { display: flex; flex-wrap: wrap; gap: 8px; }
-  .sizeOptions button {
-    padding: 8px 14px; border: 1px solid #ddd; border-radius: 8px; background: #f7f8fa;
-    font-size: 14px; cursor: pointer; color: #333;
-  }
-  .sizeOptions button.selected { background: #4f7cff; color: #fff; border-color: #4f7cff; }
-  .overlayBtn {
-    width: 100%; padding: 12px; border: none; border-radius: 10px; background: #4f7cff;
-    color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 6px;
-  }
-  .overlayBtn:disabled { opacity: 0.6; }
-  .overlayBtn.danger { background: #e74c3c; }
-  .overlayBtnSecondary {
-    width: 100%; padding: 10px; border: none; background: none; color: #999;
-    font-size: 13px; cursor: pointer; margin-top: 8px;
-  }
-
-  /* ===== Telegram tungi (dark) rejimi ===== */
-  body.tg-dark .sub,
-  body.tg-dark .productDesc,
-  body.tg-dark .productDelivery,
-  body.tg-dark .empty,
+  /* ===== Telegram tungi (dark) rejimi uchun ranglar ===== */
+  body.tg-dark .weekdays,
+  body.tg-dark .yearRow .mSalary,
   body.tg-dark .status.info,
-  body.tg-dark .formRow label,
-  body.tg-dark .overlayBtnSecondary,
-  body.tg-dark .orderRow .line {
-    color: var(--tg-theme-hint-color, #999);
-  }
-
-  body.tg-dark .tabs button,
-  body.tg-dark .subTabs button {
-    background: rgba(255,255,255,0.06);
+  body.tg-dark .salaryRow .unit,
+  body.tg-dark .salaryRow label {
     color: var(--tg-theme-hint-color, #aaa);
-    border: 1px solid rgba(255,255,255,0.1);
   }
-  body.tg-dark .tabs button.active,
-  body.tg-dark .subTabs button.active {
-    background: #4f7cff;
-    color: #fff;
-    border-color: #4f7cff;
-  }
-
-  body.tg-dark .productName,
-  body.tg-dark .overlayCard h2,
-  body.tg-dark .orderRow .top {
-    color: var(--tg-theme-text-color, #f2f2f2);
-  }
-
-  body.tg-dark .productCard,
-  body.tg-dark .orderRow {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: none;
-  }
-  body.tg-dark .orderRow img,
-  body.tg-dark .productCard img,
-  body.tg-dark .cardGallery {
+  body.tg-dark .day:not(.worked) {
     background: rgba(255,255,255,0.08);
+    color: var(--tg-theme-text-color, #fff);
   }
-  body.tg-dark .imgCountDots span {
-    background: rgba(255,255,255,0.3);
-    box-shadow: none;
-  }
-  body.tg-dark .imgCountDots span.active {
-    background: #4f7cff;
-  }
-
-  body.tg-dark .adminRow button,
-  body.tg-dark .sizeOptions button {
-    border: 1px solid rgba(255,255,255,0.15);
-    color: var(--tg-theme-hint-color, #ccc);
-    background: rgba(255,255,255,0.05);
-  }
-  body.tg-dark .sizeOptions button.selected {
-    background: #4f7cff;
-    color: #fff;
-    border-color: #4f7cff;
-  }
-
-  body.tg-dark .overlayCard {
-    background: #1c1c1e;
-    border: 1px solid rgba(255,255,255,0.08);
-  }
-  body.tg-dark #detailName {
-    color: var(--tg-theme-text-color, #f2f2f2);
-  }
-  body.tg-dark #detailDesc {
+  body.tg-dark .tabs button {
+    background: rgba(255,255,255,0.08);
     color: var(--tg-theme-hint-color, #aaa);
   }
-  body.tg-dark #odBody {
-    color: var(--tg-theme-text-color, #ddd);
+  body.tg-dark .header button.nav {
+    background: rgba(255,255,255,0.08);
+    color: var(--tg-theme-text-color, #fff);
   }
-  body.tg-dark .galleryDots span {
-    background: rgba(255,255,255,0.2);
+  body.tg-dark .summary,
+  body.tg-dark .salaryRow {
+    border-top-color: rgba(255,255,255,0.1);
   }
-  body.tg-dark .galleryDots span.active {
-    background: #4f7cff;
-  }
-  body.tg-dark .formRow input,
-  body.tg-dark .formRow textarea,
-  body.tg-dark .formRow select {
-    background: rgba(255,255,255,0.07);
-    color: var(--tg-theme-text-color, #f2f2f2);
-    border: 1px solid rgba(255,255,255,0.15);
-  }
-  body.tg-dark .phoneRow .prefix {
-    background: rgba(255,255,255,0.1);
-    color: var(--tg-theme-text-color, #f2f2f2);
-  }
-  body.tg-dark #orderConfirmSummary {
-    background: rgba(255,255,255,0.07);
-    color: var(--tg-theme-text-color, #f2f2f2);
-    border: 1px solid rgba(255,255,255,0.08);
-  }
-
-  body.tg-dark .claimBox {
-    background: rgba(255, 200, 100, 0.1);
-    border-color: rgba(255, 200, 100, 0.3);
-    color: #f0c274;
-  }
-
-  body.tg-dark .badge.pending {
-    background: rgba(255, 200, 100, 0.15);
-    color: #f0c274;
-  }
-  body.tg-dark .badge.accepted {
-    background: rgba(46, 204, 113, 0.15);
-    color: #6fe0a0;
-  }
-  body.tg-dark .badge.cancelled {
-    background: rgba(231, 76, 60, 0.15);
-    color: #f19c92;
-  }
-  body.tg-dark .cancelBtn {
-    border-color: rgba(231, 76, 60, 0.4);
-    color: #f19c92;
-    background: rgba(231, 76, 60, 0.08);
-  }
-  body.tg-dark .deleteBtn {
+  body.tg-dark .salaryRow input {
+    background: rgba(255,255,255,0.08);
+    color: var(--tg-theme-text-color, #fff);
     border-color: rgba(255,255,255,0.15);
-    color: var(--tg-theme-hint-color, #999);
-    background: rgba(255,255,255,0.04);
   }
-  body.tg-dark .addProductBtn {
-    box-shadow: none;
+  body.tg-dark .yearRow {
+    border-bottom-color: rgba(255,255,255,0.08);
+  }
+  body.tg-dark .yearTotal {
+    border-top-color: rgba(255,255,255,0.15);
+    color: var(--tg-theme-text-color, #fff);
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>🛍 Do'kon</h1>
-  <div class="sub" id="subLine">Yuklanmoqda...</div>
-
-  <div id="claimSection"></div>
-
-  <div class="tabs" id="tabsRow" style="display:none;">
-    <button id="tabProducts" class="active" onclick="showView('products')">Mahsulotlar</button>
-    <button id="tabOrders" onclick="showView('orders')"><span id="tabOrdersLabel">Buyurtmalar</span><span id="newOrdersBadge" class="tabBadge" style="display:none;"></span></button>
+<div class="card">
+  <div class="tabs">
+    <button id="tabMonth" class="active" onclick="showView('month')">Oylik</button>
+    <button id="tabYear" onclick="showView('year')">Yillik hisobot</button>
   </div>
 
-  <button class="addProductBtn" id="addProductBtn" style="display:none;" onclick="openProductForm()">➕ Mahsulot qo'shish</button>
-
-  <div class="subTabs" id="adminOrderSubTabs" style="display:none;">
-    <button id="subTabNew" class="active" onclick="showOrderSubView('new')">🆕 Yangi</button>
-    <button id="subTabAccepted" onclick="showOrderSubView('accepted')">✅ Qabul qilingan</button>
+  <div id="monthView">
+    <div class="header">
+      <button class="nav" onclick="changeMonth(-1)">‹</button>
+      <h2 id="monthLabel"></h2>
+      <button class="nav" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="weekdays"><div>Du</div><div>Se</div><div>Ch</div><div>Pa</div><div>Ju</div><div>Sh</div><div>Ya</div></div>
+    <div class="days" id="daysGrid"></div>
+    <div class="summary">
+      <div class="count">Ishlagan kunlar: <b id="workedCount">0</b></div>
+    </div>
+    <div class="salaryRow">
+      <label for="salaryInput">Oylik maosh:</label>
+      <input type="text" id="salaryInput" placeholder="0" inputmode="numeric" oninput="onSalaryInput()" onblur="onSalaryChange()">
+      <span class="unit">won</span>
+      <button class="doneBtn" onclick="onSalaryDone()">Tayyor</button>
+    </div>
+    <div class="status" id="statusMsg"></div>
   </div>
 
-  <div id="productsView"></div>
-  <div id="ordersView" style="display:none;"></div>
-
-  <div class="status" id="statusMsg"></div>
-</div>
-
-<div class="overlay hidden" id="productOverlay">
-  <div class="overlayCard">
-    <h2 id="productFormTitle">Yangi mahsulot</h2>
-    <div class="formRow">
-      <label>Nomi</label>
-      <input type="text" id="pName" placeholder="Masalan: Erkaklar kurtkasi">
+  <div id="yearView" style="display:none;">
+    <div class="header">
+      <button class="nav" onclick="changeYear(-1)">‹</button>
+      <h2 id="yearLabel"></h2>
+      <button class="nav" onclick="changeYear(1)">›</button>
     </div>
-    <div class="formRow">
-      <label>Narxi (so'm)</label>
-      <input type="text" id="pPrice" placeholder="Masalan: 45,000" inputmode="numeric" oninput="onPriceInput()">
+    <div id="yearList"></div>
+    <div class="yearTotal">
+      <div class="row"><span>Yillik jami kun</span><b id="yearTotalCount">0</b></div>
+      <div class="row"><span>Yillik jami oylik</span><b id="yearTotalSalary">0</b></div>
     </div>
-    <div class="formRow">
-      <label>Yetkazib berish sanasi (ixtiyoriy)</label>
-      <input type="text" id="pDelivery" placeholder="Masalan: 3-5 kun ichida">
-    </div>
-    <div class="formRow">
-      <label>O'lchamlar (ixtiyoriy, vergul bilan)</label>
-      <input type="text" id="pSizes" placeholder="Masalan: S, M, L, XL">
-    </div>
-    <div class="formRow">
-      <label>Ranglar (ixtiyoriy, vergul bilan)</label>
-      <input type="text" id="pColors" placeholder="Masalan: Qizil, Yashil, Ko'k">
-    </div>
-    <div class="formRow">
-      <label>Tavsif (ixtiyoriy)</label>
-      <textarea id="pDesc" placeholder="Qisqacha ma'lumot"></textarea>
-    </div>
-    <div class="formRow">
-      <label>Rasmlar (ixtiyoriy, bir nechta tanlash mumkin)</label>
-      <input type="file" id="pImageFile" accept="image/*" multiple onchange="onImageFileChange(event)">
-      <div id="pImagePreviewRow" class="previewRow"></div>
-    </div>
-    <button class="overlayBtn" onclick="saveProduct()">Saqlash</button>
-    <button class="overlayBtn danger" id="deleteProductBtn" onclick="deleteProduct()" style="display:none;">O'chirish</button>
-    <button class="overlayBtnSecondary" onclick="closeProductForm()">Bekor qilish</button>
-  </div>
-</div>
-
-<div class="overlay hidden" id="orderOverlay">
-  <div class="overlayCard">
-    <h2>Buyurtma berish</h2>
-    <p style="font-size:13px; color:#888; text-align:center; margin-bottom:14px;" id="orderProductLabel"></p>
-
-    <div class="formRow" id="sizeFormRow" style="display:none;">
-      <label>O'lcham</label>
-      <div class="sizeOptions" id="sizeOptions"></div>
-    </div>
-
-    <div class="formRow" id="colorFormRow" style="display:none;">
-      <label>Rang</label>
-      <select id="colorSelect" onchange="selectedColor = this.value;"></select>
-    </div>
-
-    <div class="formRow">
-      <label>Soni</label>
-      <select id="oQty">
-        <option value="1">1 dona</option>
-        <option value="2">2 dona</option>
-        <option value="3">3 dona</option>
-        <option value="4">4 dona</option>
-        <option value="5">5 dona</option>
-        <option value="6">6 dona</option>
-        <option value="7">7 dona</option>
-        <option value="8">8 dona</option>
-        <option value="9">9 dona</option>
-        <option value="10">10 dona</option>
-      </select>
-    </div>
-
-    <div class="formRow">
-      <label>Ismingiz</label>
-      <input type="text" id="oName" placeholder="Ismingiz">
-    </div>
-    <div class="formRow">
-      <label>Telefon raqamingiz</label>
-      <div class="phoneRow">
-        <span class="prefix">+998</span>
-        <input type="tel" id="oPhone" placeholder="90 380 90 80" inputmode="numeric" oninput="onPhoneInput()">
-      </div>
-    </div>
-    <div class="formRow">
-      <label>Manzil</label>
-      <textarea id="oAddress" placeholder="Yetkazib berish manzili"></textarea>
-    </div>
-    <button class="overlayBtn" id="submitOrderBtn" onclick="openOrderConfirm()">Buyurtma berish</button>
-    <button class="overlayBtnSecondary" onclick="closeOrderForm()">Bekor qilish</button>
-  </div>
-</div>
-
-<div class="overlay hidden" id="orderConfirmOverlay">
-  <div class="overlayCard" style="max-width:320px;">
-    <h2>Buyurtmani tasdiqlaysizmi?</h2>
-    <p id="orderConfirmSummary" style="font-size:13px; color:#555; white-space:pre-line; line-height:1.5; text-align:left; background:#f7f8fa; padding:12px; border-radius:8px;"></p>
-    <button class="overlayBtn" id="confirmSubmitBtn" onclick="submitOrder()">Ha, buyurtma berish</button>
-    <button class="overlayBtnSecondary" onclick="closeOrderConfirm()">Orqaga</button>
-  </div>
-</div>
-
-<div class="overlay hidden" id="productDetailOverlay">
-  <div class="overlayCard" style="padding:0; max-width:400px;">
-    <div style="position:sticky; top:0; height:0; overflow:visible; z-index:5;">
-      <button onclick="closeProductDetail()" style="position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.45); color:#fff; border:none; font-size:15px; cursor:pointer;">✕</button>
-    </div>
-    <div class="gallery" id="detailGallery"></div>
-    <div class="galleryDots" id="detailGalleryDots" style="display:none;"></div>
-    <div style="padding:18px;">
-      <h2 id="detailName" style="text-align:left; margin-bottom:6px;"></h2>
-      <div id="detailPrice" style="font-size:18px; font-weight:700; color:#4f7cff; margin-bottom:4px;"></div>
-      <div id="detailDelivery" class="productDelivery" style="margin-bottom:12px;"></div>
-      <div id="detailDesc" style="font-size:14px; color:#666; line-height:1.5; margin-bottom:16px; white-space:pre-line;"></div>
-      <button class="overlayBtn" id="detailOrderBtn"><svg width="16" height="16" viewBox="0 0 24 24" style="vertical-align:-3px; margin-right:5px;"><path fill="#ffffff" fill-opacity="0" d="M0 0h24v24H0z"/><path fill="#22c55e" d="M2 3a1 1 0 0 1 1-1h1.2a1 1 0 0 1 .98.8L5.5 5H21a1 1 0 0 1 .97 1.24l-1.6 6.5A2 2 0 0 1 18.42 14H8.27a2 2 0 0 1-1.94-1.51L4.2 4.24 3.94 3H3a1 1 0 0 1-1-1z"/><circle cx="9" cy="19" r="1.6" fill="#22c55e"/><circle cx="18" cy="19" r="1.6" fill="#22c55e"/><path d="M12 6.5v6M9 10l3 3 3-3" stroke="#facc15" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Buyurtma berish</button>
-      <button class="overlayBtnSecondary" onclick="closeProductDetail()" style="color:#4f7cff;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:5px;"><path d="M15 4L9 12L15 20"/></svg>Ortga</button>
-    </div>
-  </div>
-</div>
-
-<div class="overlay hidden" id="imageViewerOverlay" style="background:rgba(0,0,0,0.92); z-index:20;">
-  <div id="viewerStage" style="width:100%; height:100%; overflow:hidden; touch-action:none; display:flex; align-items:center; justify-content:center;">
-    <img id="viewerImage" style="width:100%; max-width:600px; will-change:transform;">
-  </div>
-  <button onclick="closeImageViewer()" style="position:fixed; top:16px; right:16px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.15); color:#fff; border:none; font-size:18px; cursor:pointer; z-index:21;">✕</button>
-</div>
-
-<div class="overlay hidden" id="orderDetailOverlay">
-  <div class="overlayCard">
-    <div style="position:sticky; top:-20px; height:0; overflow:visible; z-index:5;">
-      <button onclick="closeOrderDetail()" style="position:absolute; top:10px; right:-10px; width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.45); color:#fff; border:none; font-size:15px; cursor:pointer;">✕</button>
-    </div>
-    <h2>Buyurtma tafsilotlari</h2>
-    <img id="odImage" style="width:100%; max-height:220px; object-fit:cover; border-radius:10px; display:none; margin-bottom:12px;">
-    <div id="odBody" style="font-size:14px; line-height:1.8; color:#444;"></div>
-    <button class="overlayBtnSecondary" onclick="closeOrderDetail()" style="color:#4f7cff;">Yopish</button>
   </div>
 </div>
 
 <script>
 const tg = window.Telegram ? window.Telegram.WebApp : null;
-if (tg) {
-  tg.ready();
-  tg.expand();
-  if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
-}
-
+if (tg) { tg.ready(); tg.expand(); }
 
 function applyTelegramTheme() {
   if (tg && tg.colorScheme === "dark") document.body.classList.add("tg-dark");
@@ -520,7 +184,7 @@ document.addEventListener('touchend', function (event) {
 }, { passive: false });
 document.addEventListener('gesturestart', function (event) { event.preventDefault(); });
 
-// ====== FIREBASE (mavjud "Harajatlar" loyihasi) ======
+// ====== FIREBASE (xuddi "Uy xarajatlari" ilovasidagi loyiha) ======
 const firebaseConfig = {
   apiKey: "AIzaSyALoMnUIFP1r5Ol0XD15jVrpKDmCjbk5A0",
   authDomain: "harajatlar-2c00d.firebaseapp.com",
@@ -532,859 +196,253 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const shopRef = db.ref("shop");
-const productsRef = shopRef.child("products");
-const ordersRef = shopRef.child("orders");
-const orderCounterRef = shopRef.child("orderCounter");
-const adminIdRef = shopRef.child("adminId");
-
-// ====== TELEGRAM BOT (buyurtma xabarlarini yuborish uchun) ======
-const BOT_TOKEN = "8042343551:AAHIMer_WaT68alPha8BRheFNsvPhXSK9JY";
-// =======================================================
-
-function showMsg(text) {
-  if (tg && tg.showAlert) tg.showAlert(text);
-  else alert(text);
-}
-function setStatus(msg, cls) {
-  const el = document.getElementById("statusMsg");
-  el.textContent = msg;
-  el.className = "status" + (cls ? " " + cls : "");
-}
 
 const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
-const myId = tgUser ? String(tgUser.id) : null;
-const myName = tgUser ? (tgUser.first_name || "Foydalanuvchi") : "Mehmon";
+const uid = tgUser ? String(tgUser.id) : "guest";
+const workdaysRef = db.ref("workdays/" + uid);
+// ===================================================================
 
-let products = {};
-let orders = {};
-let adminId = null;
-let isAdmin = false;
-let editingProductKey = null;
-let pendingImages = [];
-let orderingProductKey = null;
-let selectedSize = null;
-let selectedColor = null;
-let isSubmittingOrder = false;
-let pendingOrder = null;
-let orderSubView = "new";
+let current = new Date();
+current.setDate(1);
+let viewYear = current.getFullYear();
+let workedData = {};
+let salaryData = {};
 
-document.getElementById("subLine").textContent = "Siz: " + myName;
+const monthNames = ["Yanvar","Fevral","Mart","Aprel","May","Iyun","Iyul","Avgust","Sentabr","Oktabr","Noyabr","Dekabr"];
 
-// ====== NARX FORMATLASH ======
-function parsePriceInput(str) {
+function keyFor(y, m) { return y + "_" + m; }
+function dateStr(y, m, d) { return y + "-" + String(m+1).padStart(2,"0") + "-" + String(d).padStart(2,"0"); }
+
+function setStatus(msg, cls) {
+  const el = document.getElementById("statusMsg");
+  if (el) { el.textContent = msg; el.className = "status" + (cls ? " " + cls : ""); }
+}
+
+let allDataLoaded = false;
+
+async function preloadAllData() {
+  try {
+    const snap = await workdaysRef.once("value");
+    const all = snap.val() || {};
+    Object.keys(all).forEach(key => {
+      if (key === "_migrated") return;
+      const entry = all[key] || {};
+      workedData[key] = entry.days || [];
+      salaryData[key] = entry.salary || 0;
+    });
+  } catch (e) {
+    setStatus("Ma'lumot yuklashda xatolik: " + e.message, "fail");
+  }
+  allDataLoaded = true;
+}
+
+async function loadMonth(y, m) {
+  const key = keyFor(y, m);
+  if (workedData[key] !== undefined) return workedData[key];
+  if (allDataLoaded) { workedData[key] = []; return workedData[key]; }
+  try {
+    const snap = await workdaysRef.child(key).child("days").once("value");
+    workedData[key] = snap.val() || [];
+  } catch (e) {
+    workedData[key] = [];
+  }
+  return workedData[key];
+}
+
+async function persistMonth(y, m) {
+  const key = keyFor(y, m);
+  setStatus("Saqlanmoqda...", "");
+  try {
+    await workdaysRef.child(key).child("days").set(workedData[key]);
+    setStatus("Saqlandi ✓", "ok");
+    setTimeout(() => setStatus("", ""), 1200);
+  } catch (e) {
+    setStatus("Xatolik: " + e.message, "fail");
+  }
+}
+
+async function loadSalary(y, m) {
+  const key = keyFor(y, m);
+  if (salaryData[key] !== undefined) return salaryData[key];
+  if (allDataLoaded) { salaryData[key] = 0; return salaryData[key]; }
+  try {
+    const snap = await workdaysRef.child(key).child("salary").once("value");
+    salaryData[key] = snap.val() || 0;
+  } catch (e) {
+    salaryData[key] = 0;
+  }
+  return salaryData[key];
+}
+
+async function persistSalary(y, m, value) {
+  const key = keyFor(y, m);
+  salaryData[key] = value;
+  setStatus("Saqlanmoqda...", "");
+  try {
+    await workdaysRef.child(key).child("salary").set(value);
+    setStatus("Saqlandi ✓", "ok");
+    setTimeout(() => setStatus("", ""), 1200);
+  } catch (e) {
+    setStatus("Xatolik: " + e.message, "fail");
+  }
+}
+
+async function migrateFromCloudStorageIfNeeded() {
+  if (!tg || !tg.CloudStorage) return;
+
+  try {
+    const alreadyMigrated = await workdaysRef.child("_migrated").once("value");
+    if (alreadyMigrated.val()) return;
+  } catch (e) {
+    return;
+  }
+
+  setStatus("Eski ma'lumotlar tekshirilmoqda...", "info");
+
+  const keys = await new Promise((resolve) => {
+    tg.CloudStorage.getKeys((err, result) => resolve(err ? [] : (result || [])));
+  });
+
+  const relevantKeys = keys.filter(k => /^(worked|salary)_\d+_\d+$/.test(k));
+  if (relevantKeys.length === 0) {
+    try { await workdaysRef.child("_migrated").set(true); } catch (e) {}
+    setStatus("", "");
+    return;
+  }
+
+  const values = await new Promise((resolve) => {
+    tg.CloudStorage.getItems(relevantKeys, (err, result) => resolve(err ? {} : (result || {})));
+  });
+
+  let migratedCount = 0;
+  for (const key of relevantKeys) {
+    const raw = values[key];
+    if (raw === undefined || raw === null || raw === "") continue;
+    const match = key.match(/^(worked|salary)_(\d+)_(\d+)$/);
+    if (!match) continue;
+    const type = match[1];
+    const y = match[2];
+    const m = match[3];
+    const firebaseKey = y + "_" + m;
+
+    try {
+      if (type === "worked") {
+        const days = JSON.parse(raw);
+        await workdaysRef.child(firebaseKey).child("days").set(days);
+      } else {
+        await workdaysRef.child(firebaseKey).child("salary").set(Number(raw));
+      }
+      migratedCount++;
+    } catch (e) {
+      // shu yozuvni o'tkazib yuborib, davom etamiz
+    }
+  }
+
+  try { await workdaysRef.child("_migrated").set(true); } catch (e) {}
+  setStatus(migratedCount > 0 ? "Eski ma'lumotlar ko'chirildi ✓ (" + migratedCount + " ta)" : "", migratedCount > 0 ? "ok" : "");
+  if (migratedCount > 0) setTimeout(() => setStatus("", ""), 3000);
+}
+
+async function render() {
+  const y = current.getFullYear();
+  const m = current.getMonth();
+  document.getElementById("monthLabel").textContent = monthNames[m] + " " + y;
+  const worked = await loadMonth(y, m);
+
+  const grid = document.getElementById("daysGrid");
+  grid.innerHTML = "";
+  const firstDay = (new Date(y, m, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+
+  for (let i = 0; i < firstDay; i++) {
+    const e = document.createElement("div"); e.className = "day empty"; grid.appendChild(e);
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const cell = document.createElement("div");
+    cell.className = "day" + (worked.includes(d) ? " worked" : "");
+    cell.textContent = d;
+    cell.onclick = () => toggleDay(d);
+    grid.appendChild(cell);
+  }
+  document.getElementById("workedCount").textContent = worked.length;
+
+  const salary = await loadSalary(y, m);
+  const salaryInput = document.getElementById("salaryInput");
+  salaryInput.value = salary ? salary.toLocaleString("en-US") : "";
+}
+
+function parseSalaryInput(str) {
   return Number(String(str).replace(/[^0-9]/g, "")) || 0;
 }
-function onPriceInput() {
-  const input = document.getElementById("pPrice");
-  const raw = parsePriceInput(input.value);
+
+function onSalaryInput() {
+  const input = document.getElementById("salaryInput");
+  const raw = parseSalaryInput(input.value);
   const cursorFromEnd = input.value.length - input.selectionStart;
   input.value = raw ? raw.toLocaleString("en-US") : "";
   const pos = Math.max(0, input.value.length - cursorFromEnd);
   input.setSelectionRange(pos, pos);
 }
 
-// ====== TELEFON FORMATLASH (+998 XX XXX XX XX) ======
-function onPhoneInput() {
-  const input = document.getElementById("oPhone");
-  let digits = input.value.replace(/[^0-9]/g, "").slice(0, 9);
-  let formatted = "";
-  if (digits.length > 0) formatted += digits.slice(0, 2);
-  if (digits.length > 2) formatted += " " + digits.slice(2, 5);
-  if (digits.length > 5) formatted += " " + digits.slice(5, 7);
-  if (digits.length > 7) formatted += " " + digits.slice(7, 9);
-  input.value = formatted;
-}
-function getFullPhone() {
-  const digits = document.getElementById("oPhone").value.replace(/[^0-9]/g, "");
-  return "+998 " + document.getElementById("oPhone").value;
+async function onSalaryDone() {
+  document.getElementById("salaryInput").blur();
+  const y = current.getFullYear();
+  const m = current.getMonth();
+  const val = parseSalaryInput(document.getElementById("salaryInput").value);
+  await persistSalary(y, m, val);
 }
 
-// ====== RASMLAR YUKLASH (bir nechtasi) ======
-function onImageFileChange(event) {
-  const files = Array.from(event.target.files || []);
-  if (files.length === 0) return;
-
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = function (ev) {
-      const img = new Image();
-      img.onload = function () {
-        const maxW = 800;
-        const scale = Math.min(1, maxW / img.width);
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
-        pendingImages.push(dataUrl);
-        renderImagePreviews();
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-  event.target.value = "";
+async function onSalaryChange() {
+  const y = current.getFullYear();
+  const m = current.getMonth();
+  const val = parseSalaryInput(document.getElementById("salaryInput").value);
+  await persistSalary(y, m, val);
 }
 
-function renderImagePreviews() {
-  const row = document.getElementById("pImagePreviewRow");
-  row.innerHTML = "";
-  pendingImages.forEach((src, idx) => {
-    const div = document.createElement("div");
-    div.className = "previewThumb";
-    div.innerHTML = '<img src="' + src + '"><button type="button" class="rm" onclick="removePendingImage(' + idx + ')">✕</button>';
-    row.appendChild(div);
-  });
+async function toggleDay(d) {
+  const y = current.getFullYear();
+  const m = current.getMonth();
+  const key = keyFor(y, m);
+  const idx = workedData[key].indexOf(d);
+  if (idx === -1) workedData[key].push(d); else workedData[key].splice(idx, 1);
+  if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+  await persistMonth(y, m);
+  render();
 }
 
-function removePendingImage(idx) {
-  pendingImages.splice(idx, 1);
-  renderImagePreviews();
-}
+function changeMonth(delta) { current.setMonth(current.getMonth() + delta); render(); }
 
-// ====== ADMIN BELGILASH ======
-adminIdRef.on("value", (snap) => {
-  adminId = snap.val() || null;
-  isAdmin = !!(myId && adminId && myId === adminId);
-  renderClaimSection();
-  document.getElementById("tabsRow").style.display = "flex";
-  document.getElementById("tabOrdersLabel").textContent = isAdmin ? "📋 Buyurtmalar" : "🧾 Buyurtmalarim";
-  document.getElementById("addProductBtn").style.display = "none";
-  renderProducts();
-  renderOrders();
-  updateNewOrdersBadge();
-});
-
-function renderClaimSection() {
-  const el = document.getElementById("claimSection");
-  if (adminId === null && myId) {
-    el.innerHTML = '<div class="claimBox">Bu do\'kon uchun hali admin belgilanmagan.<br>Agar bu sizning do\'koningiz bo\'lsa:<br><button onclick="claimAdmin()">Men adminman</button></div>';
-  } else {
-    el.innerHTML = "";
-  }
-}
-
-async function claimAdmin() {
-  if (!myId) {
-    showMsg("Telegram orqali ochilmagani uchun aniqlab bo'lmadi.");
-    return;
-  }
-  try {
-    await adminIdRef.set(myId);
-  } catch (e) {
-    showMsg("Xatolik: " + e.message);
-  }
-}
-
-productsRef.on("value", (snap) => {
-  products = snap.val() || {};
-  renderProducts();
-});
-
-ordersRef.on("value", (snap) => {
-  orders = snap.val() || {};
-  renderOrders();
-  updateNewOrdersBadge();
-});
-
-function updateNewOrdersBadge() {
-  const badge = document.getElementById("newOrdersBadge");
-  if (!isAdmin) {
-    badge.style.display = "none";
-    return;
-  }
-  const count = Object.values(orders).filter(o => (o.status || "new") === "new").length;
-  if (count > 0) {
-    badge.textContent = count > 99 ? "99+" : String(count);
-    badge.style.display = "flex";
-  } else {
-    badge.style.display = "none";
-  }
-}
-
-// ====== MAHSULOTLAR RO'YXATI ======
-function renderProducts() {
-  const el = document.getElementById("productsView");
-  const keys = Object.keys(products);
-  if (keys.length === 0) {
-    el.innerHTML = '<div class="empty">Hali mahsulot qo\'shilmagan</div>';
-  } else {
-    keys.sort((a, b) => (products[b].ts || 0) - (products[a].ts || 0));
-    el.innerHTML = "";
-    keys.forEach(key => {
-      const p = products[key];
-      const imgs = getProductImages(p);
-      const card = document.createElement("div");
-      card.className = "productCard";
-      let html = "";
-
-      if (imgs.length > 0) {
-        html += '<div class="imgWrap">';
-        html += '<div class="cardGallery" id="cg_' + key + '">';
-        imgs.forEach(src => {
-          html += '<img src="' + src + '" onclick="openProductDetail(\'' + key + '\')" onerror="this.style.display=\'none\'">';
-        });
-        html += '</div>';
-        if (imgs.length > 1) {
-          html += '<div class="imgCountDots" id="cd_' + key + '">';
-          for (let i = 0; i < imgs.length; i++) html += '<span' + (i === 0 ? ' class="active"' : '') + '></span>';
-          html += '</div>';
-        }
-        html += '</div>';
-      }
-
-      html += '<div class="productBody" onclick="openProductDetail(\'' + key + '\')">';
-      html += '<div class="productName">' + p.name + '</div>';
-      if (p.desc) html += '<div class="productDesc">' + p.desc + '</div>';
-      html += '<div class="productPrice">' + p.price + '</div>';
-      if (p.delivery) html += '<div class="productDelivery">🚚 ' + p.delivery + '</div>';
-      html += '</div>';
-
-      html += '<div class="productActions">';
-      html += '<button class="orderBtn" onclick="openOrderForm(\'' + key + '\')">' + '<svg width="16" height="16" viewBox="0 0 24 24" style="vertical-align:-3px; margin-right:5px;"><path fill="#ffffff" fill-opacity="0" d="M0 0h24v24H0z"/><path fill="#22c55e" d="M2 3a1 1 0 0 1 1-1h1.2a1 1 0 0 1 .98.8L5.5 5H21a1 1 0 0 1 .97 1.24l-1.6 6.5A2 2 0 0 1 18.42 14H8.27a2 2 0 0 1-1.94-1.51L4.2 4.24 3.94 3H3a1 1 0 0 1-1-1z"/><circle cx="9" cy="19" r="1.6" fill="#22c55e"/><circle cx="18" cy="19" r="1.6" fill="#22c55e"/><path d="M12 6.5v6M9 10l3 3 3-3" stroke="#facc15" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' + 'Buyurtma berish</button>';
-      if (isAdmin) {
-        html += '<div class="adminRow"><button onclick="openProductForm(\'' + key + '\')">✏️ Tahrirlash</button></div>';
-      }
-      html += '</div>';
-      card.innerHTML = html;
-      el.appendChild(card);
-
-      if (imgs.length > 1) {
-        const galleryEl = document.getElementById("cg_" + key);
-        const dotsEl = document.getElementById("cd_" + key);
-        galleryEl.addEventListener("scroll", function () {
-          const idx = Math.round(galleryEl.scrollLeft / galleryEl.clientWidth);
-          Array.from(dotsEl.children).forEach((d, i) => d.classList.toggle("active", i === idx));
-        });
-      }
-    });
-  }
-  document.getElementById("addProductBtn").style.display =
-    (isAdmin && document.getElementById("productsView").style.display !== "none") ? "block" : "none";
-}
-
-// ====== BUYURTMALAR RO'YXATI ======
-function renderOrders() {
-  document.getElementById("adminOrderSubTabs").style.display =
-    (isAdmin && document.getElementById("ordersView").style.display !== "none") ? "flex" : "none";
-
-  const el = document.getElementById("ordersView");
-  let keys = Object.keys(orders);
-
-  if (isAdmin) {
-    keys = keys.filter(k => (orders[k].status || "new") === orderSubView);
-  } else {
-    keys = keys.filter(k => orders[k].customerId === myId);
-  }
-
-  if (keys.length === 0) {
-    el.innerHTML = '<div class="empty">' + (isAdmin ? "Bu bo'limda buyurtma yo'q" : "Hali buyurtmangiz yo'q") + '</div>';
-    return;
-  }
-
-  keys.sort((a, b) => (orders[b].ts || 0) - (orders[a].ts || 0));
-  el.innerHTML = "";
-  keys.forEach(key => {
-    const o = orders[key];
+async function renderYear() {
+  document.getElementById("yearLabel").textContent = viewYear;
+  const list = document.getElementById("yearList");
+  list.innerHTML = "";
+  let total = 0;
+  let totalSalary = 0;
+  for (let m = 0; m < 12; m++) {
+    const worked = await loadMonth(viewYear, m);
+    const salary = await loadSalary(viewYear, m);
+    total += worked.length;
+    totalSalary += salary;
     const row = document.createElement("div");
-    row.className = "orderRow";
-    const date = o.ts ? new Date(o.ts).toLocaleString("uz-UZ") : "";
-    const status = o.status || "new";
-
-    let img = o.image ? '<img src="' + o.image + '" onclick="openOrderDetail(\'' + key + '\')">' : '<img>';
-    let body = '<div class="body">';
-    body += '<div class="orderInfoClick" onclick="openOrderDetail(\'' + key + '\')">';
-    if (o.orderNumber) body += '<div class="orderNumber">Buyurtma №' + o.orderNumber + '</div>';
-    const variantLabel = [o.size, o.color].filter(Boolean).join(", ");
-    body += '<div class="top"><span>' + o.productName + (variantLabel ? " (" + variantLabel + ")" : "") + ' × ' + (o.qty || 1) + '</span><span>' + o.price + '</span></div>';
-
-    if (isAdmin) {
-      body += '<div class="line">👤 ' + o.customerName + '</div>';
-      body += '<div class="line">📞 ' + o.phone + '</div>';
-      body += '<div class="line">📍 ' + o.address + '</div>';
-    }
-    body += '<div class="line">🕒 ' + date + '</div>';
-    body += '</div>';
-
-    if (isAdmin) {
-      if (status === "new") {
-        body += '<button class="acceptBtn" onclick="acceptOrder(\'' + key + '\')">✅ Qabul qilish</button>';
-        body += '<button class="cancelBtn" onclick="adminCancelOrder(\'' + key + '\')">❌ Bekor qilish</button>';
-      } else {
-        body += '<span class="badge accepted">✅ Qabul qilingan</span>';
-      }
-      body += '<button class="deleteBtn" onclick="adminDeleteOrder(\'' + key + '\')">🗑 O\'chirish</button>';
-    } else {
-      if (status === "accepted") {
-        body += '<span class="badge accepted">✅ Buyurtmangiz qabul qilindi</span>';
-      } else if (status === "cancelled") {
-        body += '<span class="badge cancelled">❌ Bekor qilindi</span>';
-      } else {
-        body += '<span class="badge pending">⏳ Kutilmoqda</span>';
-        body += '<button class="cancelBtn" onclick="cancelOrder(\'' + key + '\')">❌ Bekor qilish</button>';
-      }
-    }
-    body += '</div>';
-
-    row.innerHTML = img + body;
-    el.appendChild(row);
-  });
-}
-
-function cancelOrder(key) {
-  const doIt = () => doCancelOrder(key);
-  if (tg && tg.showConfirm) {
-    tg.showConfirm("Buyurtmani bekor qilishni tasdiqlaysizmi?", (confirmed) => {
-      if (confirmed) doIt();
-    });
-  } else if (confirm("Buyurtmani bekor qilishni tasdiqlaysizmi?")) {
-    doIt();
+    row.className = "yearRow";
+    row.innerHTML = '<span class="mName">' + monthNames[m] + '</span><span class="mDays">' + worked.length + ' kun</span><span class="mSalary">' + (salary ? salary.toLocaleString("ko-KR") + " won" : "—") + '</span>';
+    list.appendChild(row);
   }
+  document.getElementById("yearTotalCount").textContent = total + " kun";
+  document.getElementById("yearTotalSalary").textContent = totalSalary.toLocaleString("ko-KR") + " won";
 }
 
-async function doCancelOrder(key) {
-  try {
-    await ordersRef.child(key).update({ status: "cancelled" });
-  } catch (e) {
-    setStatus("Xatolik: " + e.message, "fail");
-  }
-}
-
-function showOrderSubView(v) {
-  orderSubView = v;
-  document.getElementById("subTabNew").classList.toggle("active", v === "new");
-  document.getElementById("subTabAccepted").classList.toggle("active", v === "accepted");
-  renderOrders();
-}
-
-function openOrderDetail(key) {
-  const o = orders[key];
-  if (!o) return;
-  const img = document.getElementById("odImage");
-  if (o.image) {
-    img.src = o.image;
-    img.style.display = "block";
-  } else {
-    img.style.display = "none";
-  }
-
-  const date = o.ts ? new Date(o.ts).toLocaleString("uz-UZ") : "";
-  const status = o.status || "new";
-  const statusText = status === "accepted" ? "✅ Qabul qilingan" : (status === "cancelled" ? "❌ Bekor qilindi" : "⏳ Kutilmoqda");
-
-  let html = "";
-  if (o.orderNumber) html += "<b style='color:#4f7cff;'>Buyurtma №" + o.orderNumber + "</b><br><br>";
-  html += "<b>🛍 " + o.productName + "</b><br>";
-  if (o.size) html += "O'lcham: " + o.size + "<br>";
-  if (o.color) html += "Rang: " + o.color + "<br>";
-  html += "Soni: " + (o.qty || 1) + " dona<br>";
-  if (o.unitPrice) html += "Birlik narxi: " + o.unitPrice + "<br>";
-  html += "Jami: <b>" + o.price + "</b><br><br>";
-  html += "👤 " + o.customerName + "<br>";
-  html += "📞 " + o.phone + "<br>";
-  html += "📍 " + o.address + "<br><br>";
-  html += "🕒 " + date + "<br>";
-  html += "Holati: " + statusText;
-
-  document.getElementById("odBody").innerHTML = html;
-  document.getElementById("orderDetailOverlay").classList.remove("hidden");
-}
-
-function closeOrderDetail() {
-  document.getElementById("orderDetailOverlay").classList.add("hidden");
-}
-
-async function acceptOrder(key) {
-  try {
-    await ordersRef.child(key).update({ status: "accepted" });
-    const o = orders[key];
-    if (o && o.customerId) {
-      notifyCustomerAccepted(o);
-    }
-  } catch (e) {
-    setStatus("Xatolik: " + e.message, "fail");
-  }
-}
-
-function adminCancelOrder(key) {
-  const doIt = async () => {
-    try {
-      await ordersRef.child(key).update({ status: "cancelled" });
-      const o = orders[key];
-      if (o && o.customerId) {
-        notifyCustomerCancelled(o);
-      }
-    } catch (e) {
-      setStatus("Xatolik: " + e.message, "fail");
-    }
-  };
-  if (tg && tg.showConfirm) {
-    tg.showConfirm("Buyurtmani bekor qilishni tasdiqlaysizmi?", (confirmed) => { if (confirmed) doIt(); });
-  } else if (confirm("Buyurtmani bekor qilishni tasdiqlaysizmi?")) {
-    doIt();
-  }
-}
-
-function adminDeleteOrder(key) {
-  const doIt = async () => {
-    try {
-      await ordersRef.child(key).remove();
-    } catch (e) {
-      setStatus("Xatolik: " + e.message, "fail");
-    }
-  };
-  if (tg && tg.showConfirm) {
-    tg.showConfirm("Buyurtmani butunlay o'chirishni tasdiqlaysizmi? Bu qaytarib bo'lmaydi.", (confirmed) => { if (confirmed) doIt(); });
-  } else if (confirm("Buyurtmani butunlay o'chirishni tasdiqlaysizmi?")) {
-    doIt();
-  }
-}
-
-function notifyCustomerCancelled(order) {
-  if (!order.customerId || !BOT_TOKEN) return;
-  const text =
-    "❌ Buyurtmangiz bekor qilindi.\n\n" +
-    (order.orderNumber ? "Buyurtma №" + order.orderNumber + "\n" : "") +
-    "Mahsulot: " + order.productName + ([order.size, order.color].filter(Boolean).join(", ") ? " (" + [order.size, order.color].filter(Boolean).join(", ") + ")" : "") + "\n" +
-    "Soni: " + order.qty + "\n" +
-    "Narxi: " + order.price;
-
-  fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: order.customerId, text: text })
-  }).catch(() => {});
-}
+function changeYear(delta) { viewYear += delta; renderYear(); }
 
 function showView(v) {
-  document.getElementById("productsView").style.display = v === "products" ? "grid" : "none";
-  document.getElementById("ordersView").style.display = v === "orders" ? "block" : "none";
-  document.getElementById("tabProducts").classList.toggle("active", v === "products");
-  document.getElementById("tabOrders").classList.toggle("active", v === "orders");
-  renderProducts();
-  renderOrders();
+  document.getElementById("monthView").style.display = v === "month" ? "block" : "none";
+  document.getElementById("yearView").style.display = v === "year" ? "block" : "none";
+  document.getElementById("tabMonth").classList.toggle("active", v === "month");
+  document.getElementById("tabYear").classList.toggle("active", v === "year");
+  if (v === "year") renderYear();
 }
 
-// ====== MAHSULOT QO'SHISH / TAHRIRLASH ======
-
-function openProductForm(key) {
-  editingProductKey = key || null;
-  pendingImages = [];
-  const overlay = document.getElementById("productOverlay");
-  const title = document.getElementById("productFormTitle");
-  const delBtn = document.getElementById("deleteProductBtn");
-  document.getElementById("pImageFile").value = "";
-
-  if (editingProductKey) {
-    const p = products[editingProductKey];
-    title.textContent = "Mahsulotni tahrirlash";
-    document.getElementById("pName").value = p.name || "";
-    document.getElementById("pPrice").value = p.priceValue ? Number(p.priceValue).toLocaleString("en-US") : "";
-    document.getElementById("pDelivery").value = p.delivery || "";
-    document.getElementById("pSizes").value = p.sizes ? p.sizes.join(", ") : "";
-    document.getElementById("pColors").value = p.colors ? p.colors.join(", ") : "";
-    document.getElementById("pDesc").value = p.desc || "";
-    pendingImages = getProductImages(p).slice();
-    delBtn.style.display = "block";
-  } else {
-    title.textContent = "Yangi mahsulot";
-    document.getElementById("pName").value = "";
-    document.getElementById("pPrice").value = "";
-    document.getElementById("pDelivery").value = "";
-    document.getElementById("pSizes").value = "";
-    document.getElementById("pColors").value = "";
-    document.getElementById("pDesc").value = "";
-    delBtn.style.display = "none";
-  }
-  renderImagePreviews();
-  overlay.classList.remove("hidden");
-}
-
-function closeProductForm() {
-  document.getElementById("productOverlay").classList.add("hidden");
-  editingProductKey = null;
-  pendingImages = [];
-}
-
-function getProductImages(p) {
-  if (p.images && p.images.length) return p.images;
-  if (p.image) return [p.image];
-  return [];
-}
-
-async function saveProduct() {
-  const name = document.getElementById("pName").value.trim();
-  const priceValue = parsePriceInput(document.getElementById("pPrice").value);
-  const delivery = document.getElementById("pDelivery").value.trim();
-  const desc = document.getElementById("pDesc").value.trim();
-  const sizesRaw = document.getElementById("pSizes").value.trim();
-  const sizes = sizesRaw ? sizesRaw.split(",").map(s => s.trim()).filter(Boolean) : [];
-  const colorsRaw = document.getElementById("pColors").value.trim();
-  const colors = colorsRaw ? colorsRaw.split(",").map(s => s.trim()).filter(Boolean) : [];
-
-  if (!name || !priceValue) {
-    showMsg("Iltimos, nomi va narxini kiriting.");
-    return;
-  }
-
-  const price = priceValue.toLocaleString("en-US") + " so'm";
-  const images = pendingImages.slice();
-
-  setStatus("Saqlanmoqda...", "");
-  try {
-    if (editingProductKey) {
-      await productsRef.child(editingProductKey).update({ name, price, priceValue, delivery, desc, images, sizes, colors, image: images[0] || "" });
-    } else {
-      await productsRef.push({ name, price, priceValue, delivery, desc, images, sizes, colors, image: images[0] || "", ts: Date.now() });
-    }
-    setStatus("Saqlandi ✓", "ok");
-    setTimeout(() => setStatus("", ""), 1200);
-  } catch (e) {
-    setStatus("Xatolik: " + e.message, "fail");
-  }
-  closeProductForm();
-}
-
-async function deleteProduct() {
-  if (!editingProductKey) return;
-  try {
-    await productsRef.child(editingProductKey).remove();
-  } catch (e) {
-    setStatus("Xatolik: " + e.message, "fail");
-  }
-  closeProductForm();
-}
-
-// ====== BUYURTMA BERISH ======
-
-function openProductDetail(key) {
-  const p = products[key];
-  const imgs = getProductImages(p);
-  const gallery = document.getElementById("detailGallery");
-  gallery.innerHTML = "";
-  if (imgs.length > 0) {
-    imgs.forEach(src => {
-      const im = document.createElement("img");
-      im.src = src;
-      im.onclick = () => openImageViewer(src);
-      gallery.appendChild(im);
-    });
-  }
-
-  const dotsEl = document.getElementById("detailGalleryDots");
-  dotsEl.innerHTML = "";
-  if (imgs.length > 1) {
-    dotsEl.style.display = "flex";
-    imgs.forEach((_, i) => {
-      const dot = document.createElement("span");
-      if (i === 0) dot.classList.add("active");
-      dotsEl.appendChild(dot);
-    });
-    gallery.onscroll = function () {
-      const idx = Math.round(gallery.scrollLeft / gallery.clientWidth);
-      Array.from(dotsEl.children).forEach((d, i) => d.classList.toggle("active", i === idx));
-    };
-  } else {
-    dotsEl.style.display = "none";
-    gallery.onscroll = null;
-  }
-
-  document.getElementById("detailName").textContent = p.name;
-  document.getElementById("detailPrice").textContent = p.price;
-  document.getElementById("detailDelivery").textContent = p.delivery ? "🚚 " + p.delivery : "";
-  document.getElementById("detailDesc").textContent = p.desc || "";
-  document.getElementById("detailOrderBtn").onclick = function () {
-    closeProductDetail();
-    openOrderForm(key);
-  };
-  document.getElementById("productDetailOverlay").classList.remove("hidden");
-}
-
-function closeProductDetail() {
-  document.getElementById("productDetailOverlay").classList.add("hidden");
-}
-
-// ====== RASMNI QO'LDA KATTALASHTIRISH (pinch/pan/double-tap) ======
-let vzScale = 1, vzPanX = 0, vzPanY = 0;
-let vzPinchStartDist = 0, vzPinchStartScale = 1;
-let vzDragging = false, vzDragStartX = 0, vzDragStartY = 0, vzDragStartPanX = 0, vzDragStartPanY = 0;
-let vzLastTapTime = 0;
-let vzTouchHandlersBound = false;
-
-function vzApply() {
-  document.getElementById("viewerImage").style.transform =
-    "translate(" + vzPanX + "px, " + vzPanY + "px) scale(" + vzScale + ")";
-}
-
-function vzReset(animated) {
-  vzScale = 1; vzPanX = 0; vzPanY = 0;
-  const img = document.getElementById("viewerImage");
-  if (animated) {
-    img.style.transition = "transform 0.2s";
-    setTimeout(() => { img.style.transition = ""; }, 200);
-  }
-  vzApply();
-}
-
-function vzDist(t1, t2) {
-  return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-}
-
-function vzBindHandlers() {
-  if (vzTouchHandlersBound) return;
-  vzTouchHandlersBound = true;
-  const stage = document.getElementById("viewerStage");
-
-  stage.addEventListener("touchstart", function (e) {
-    if (e.touches.length === 2) {
-      vzPinchStartDist = vzDist(e.touches[0], e.touches[1]);
-      vzPinchStartScale = vzScale;
-      vzDragging = false;
-    } else if (e.touches.length === 1) {
-      if (vzScale > 1) {
-        vzDragging = true;
-        vzDragStartX = e.touches[0].clientX;
-        vzDragStartY = e.touches[0].clientY;
-        vzDragStartPanX = vzPanX;
-        vzDragStartPanY = vzPanY;
-      }
-    }
-  }, { passive: true });
-
-  stage.addEventListener("touchmove", function (e) {
-    if (e.touches.length === 2) {
-      e.preventDefault();
-      const d = vzDist(e.touches[0], e.touches[1]);
-      vzScale = Math.min(4, Math.max(1, vzPinchStartScale * (d / vzPinchStartDist)));
-      vzApply();
-    } else if (e.touches.length === 1 && vzDragging) {
-      e.preventDefault();
-      vzPanX = vzDragStartPanX + (e.touches[0].clientX - vzDragStartX);
-      vzPanY = vzDragStartPanY + (e.touches[0].clientY - vzDragStartY);
-      vzApply();
-    }
-  }, { passive: false });
-
-  stage.addEventListener("touchend", function (e) {
-    vzDragging = false;
-    if (vzScale <= 1.02) {
-      vzReset(true);
-    }
-    if (e.touches.length === 0 && e.changedTouches.length === 1) {
-      const now = Date.now();
-      if (now - vzLastTapTime < 300) {
-        if (vzScale > 1) {
-          vzReset(true);
-        } else {
-          vzScale = 2;
-          const img = document.getElementById("viewerImage");
-          img.style.transition = "transform 0.2s";
-          vzApply();
-          setTimeout(() => { img.style.transition = ""; }, 200);
-        }
-      } else if (vzScale === 1) {
-        // Oddiy bosish — yopish
-        closeImageViewer();
-      }
-      vzLastTapTime = now;
-    }
-  });
-}
-
-function openImageViewer(src) {
-  document.getElementById("viewerImage").src = src;
-  vzReset(false);
-  vzBindHandlers();
-  document.getElementById("imageViewerOverlay").classList.remove("hidden");
-}
-
-function closeImageViewer() {
-  document.getElementById("imageViewerOverlay").classList.add("hidden");
-  vzReset(false);
-}
-
-function openOrderForm(key) {
-  orderingProductKey = key;
-  selectedSize = null;
-  selectedColor = null;
-  const p = products[key];
-  document.getElementById("orderProductLabel").textContent = p.name + " — " + p.price;
-
-  const sizeRow = document.getElementById("sizeFormRow");
-  const sizeBox = document.getElementById("sizeOptions");
-  if (p.sizes && p.sizes.length > 0) {
-    sizeRow.style.display = "block";
-    sizeBox.innerHTML = "";
-    p.sizes.forEach(sz => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.textContent = sz;
-      btn.onclick = () => selectSize(sz, btn);
-      sizeBox.appendChild(btn);
-    });
-  } else {
-    sizeRow.style.display = "none";
-  }
-
-  const colorRow = document.getElementById("colorFormRow");
-  const colorSelect = document.getElementById("colorSelect");
-  if (p.colors && p.colors.length > 0) {
-    colorRow.style.display = "block";
-    colorSelect.innerHTML = "";
-    p.colors.forEach(cl => {
-      const opt = document.createElement("option");
-      opt.value = cl;
-      opt.textContent = cl;
-      colorSelect.appendChild(opt);
-    });
-    selectedColor = p.colors[0];
-  } else {
-    colorRow.style.display = "none";
-    selectedColor = null;
-  }
-
-  document.getElementById("oQty").value = "1";
-  document.getElementById("oName").value = "";
-  document.getElementById("oPhone").value = "";
-  document.getElementById("oAddress").value = "";
-  document.getElementById("orderOverlay").classList.remove("hidden");
-}
-
-function openOrderConfirm() {
-  if (isSubmittingOrder) return;
-
-  const p = products[orderingProductKey];
-  const name = document.getElementById("oName").value.trim();
-  const phoneDigits = document.getElementById("oPhone").value.replace(/[^0-9]/g, "");
-  const address = document.getElementById("oAddress").value.trim();
-  const qty = Number(document.getElementById("oQty").value);
-
-  if (!name || phoneDigits.length < 9 || !address) {
-    showMsg("Iltimos, barcha maydonlarni to'liq kiriting.");
-    return;
-  }
-  if (p.sizes && p.sizes.length > 0 && !selectedSize) {
-    showMsg("Iltimos, o'lchamni tanlang.");
-    return;
-  }
-  if (p.colors && p.colors.length > 0 && !selectedColor) {
-    showMsg("Iltimos, rangni tanlang.");
-    return;
-  }
-
-  const phone = "+998 " + document.getElementById("oPhone").value;
-  const totalValue = (p.priceValue || 0) * qty;
-  const totalText = totalValue ? totalValue.toLocaleString("en-US") + " so'm" : p.price;
-
-  pendingOrder = {
-    productName: p.name,
-    unitPrice: p.price,
-    price: totalText,
-    image: p.image || "",
-    size: selectedSize || "",
-    color: selectedColor || "",
-    qty: qty,
-    customerName: name,
-    customerId: myId || "",
-    phone: phone,
-    address: address,
-    status: "new",
-    ts: Date.now()
-  };
-
-  let variantLabel = [selectedSize, selectedColor].filter(Boolean).join(", ");
-  let summary = "";
-  summary += "🛍 " + p.name + (variantLabel ? " (" + variantLabel + ")" : "") + "\n";
-  summary += "Soni: " + qty + " dona\n";
-  summary += "Jami: " + totalText + "\n\n";
-  summary += "👤 " + name + "\n";
-  summary += "📞 " + phone + "\n";
-  summary += "📍 " + address;
-
-  document.getElementById("orderConfirmSummary").textContent = summary;
-  document.getElementById("orderConfirmOverlay").classList.remove("hidden");
-}
-
-function closeOrderConfirm() {
-  document.getElementById("orderConfirmOverlay").classList.add("hidden");
-}
-
-function selectSize(sz, btn) {
-  selectedSize = sz;
-  document.querySelectorAll("#sizeOptions button").forEach(b => b.classList.remove("selected"));
-  btn.classList.add("selected");
-}
-
-function closeOrderForm() {
-  document.getElementById("orderOverlay").classList.add("hidden");
-  orderingProductKey = null;
-}
-
-async function submitOrder() {
-  if (isSubmittingOrder || !pendingOrder) return;
-
-  isSubmittingOrder = true;
-  const btn = document.getElementById("confirmSubmitBtn");
-  btn.disabled = true;
-  setStatus("Yuborilmoqda...", "");
-
-  const order = pendingOrder;
-
-  try {
-    const counterResult = await orderCounterRef.transaction(current => (current || 0) + 1);
-    order.orderNumber = counterResult.snapshot.val();
-    await ordersRef.push(order);
-    setStatus("Buyurtma qabul qilindi ✓ (№" + order.orderNumber + ")", "ok");
-    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-    notifyAdmin(order);
-    setTimeout(() => setStatus("", ""), 2500);
-    closeOrderConfirm();
-    closeOrderForm();
-    pendingOrder = null;
-  } catch (e) {
-    setStatus("Xatolik: " + e.message, "fail");
-  }
-
-  isSubmittingOrder = false;
-  btn.disabled = false;
-}
-
-function notifyAdmin(order) {
-  if (!adminId || !BOT_TOKEN) return;
-  const text =
-    "🛒 Yangi buyurtma!\n\n" +
-    (order.orderNumber ? "Buyurtma №" + order.orderNumber + "\n" : "") +
-    "Mahsulot: " + order.productName + ([order.size, order.color].filter(Boolean).join(", ") ? " (" + [order.size, order.color].filter(Boolean).join(", ") + ")" : "") + "\n" +
-    "Soni: " + order.qty + "\n" +
-    "Narxi: " + order.price + "\n" +
-    "Xaridor: " + order.customerName + "\n" +
-    "Telefon: " + order.phone + "\n" +
-    "Manzil: " + order.address;
-
-  fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: adminId, text: text })
-  }).catch(() => {});
-}
-
-function notifyCustomerAccepted(order) {
-  if (!order.customerId || !BOT_TOKEN) return;
-  const text =
-    "✅ Buyurtmangiz qabul qilindi!\n\n" +
-    (order.orderNumber ? "Buyurtma №" + order.orderNumber + "\n" : "") +
-    "Mahsulot: " + order.productName + ([order.size, order.color].filter(Boolean).join(", ") ? " (" + [order.size, order.color].filter(Boolean).join(", ") + ")" : "") + "\n" +
-    "Soni: " + order.qty + "\n" +
-    "Narxi: " + order.price;
-
-  fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: order.customerId, text: text })
-  }).catch(() => {});
-}
+migrateFromCloudStorageIfNeeded().then(preloadAllData).then(render);
 </script>
 </body>
 </html>
